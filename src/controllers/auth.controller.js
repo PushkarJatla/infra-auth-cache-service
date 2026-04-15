@@ -67,9 +67,42 @@ const getMe = asyncHandler(async (req, res) => {
     });
 });
 
+
+const updateProfile = asyncHandler(async (req, res) => {
+    const userId = req.user.userId;
+    const { email } = req.body;
+
+    // 🔥 1. Update DB
+    const updatedUser = await prisma.user.update({
+        where: { id: userId },
+        data: { email },
+        select: { id: true, email: true },
+    });
+
+    // 🔥 2. DELETE CACHE (IMPORTANT)
+    const cacheKey = `user:${userId}`;
+    await redis.del(cacheKey);
+
+    console.log("🧹 Cache invalidated");
+
+    res.status(200).json({
+        message: "Profile updated",
+        user: updatedUser,
+    });
+});
+const refreshAccessTokenController = asyncHandler(async (req, res) => {
+    const { refreshToken } = req.body;
+
+    const result = await authService.refreshAccessToken(refreshToken);
+
+    res.status(200).json(result);
+});
+
 module.exports = {
     register,
     login,
     verifyToken,
     getMe,
+    updateProfile,
+    refreshAccessTokenController,
 };
