@@ -10,7 +10,12 @@ const loginSchema = z.object({
     password: z.string().min(6),
 });
 
+const updateSchema = z.object({
+    email: z.string().email(),
+});
+
 module.exports = {
     registerSchema,
     loginSchema,
+    updateSchema,
 };

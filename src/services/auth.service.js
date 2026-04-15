@@ -1,8 +1,11 @@
-// auth.service.js
 const bcrypt = require("bcrypt");
-const AppError = require("../utils/appError");
 const jwt = require("jsonwebtoken");
+const AppError = require("../utils/appError");
 const userRepo = require("../repositories/user.repository");
+const {
+    generateAccessToken,
+    generateRefreshToken,
+} = require("../utils/generateTokens");
 
 const register = async ({ email, password }) => {
     const existingUser = await userRepo.findUserByEmail(email);
@@ -34,16 +37,40 @@ const login = async ({ email, password }) => {
         throw new AppError("Invalid credentials", 401);
     }
 
-    const token = jwt.sign(
-        { userId: user.id },
-        process.env.JWT_SECRET,
-        { expiresIn: "1h" }
-    );
+    // 🔥 NEW PART
+    const accessToken = generateAccessToken(user.id);
+    const refreshToken = generateRefreshToken(user.id);
 
-    return { token };
+    return {
+        accessToken,
+        refreshToken,
+    };
+};
+
+
+const refreshAccessToken = async (refreshToken) => {
+    if (!refreshToken) {
+        throw new AppError("Refresh token required", 401);
+    }
+
+    try {
+        const decoded = jwt.verify(
+            refreshToken,
+            process.env.JWT_REFRESH_SECRET
+        );
+
+        const newAccessToken = generateAccessToken(decoded.userId);
+
+        return {
+            accessToken: newAccessToken,
+        };
+    } catch (err) {
+        throw new AppError("Invalid refresh token", 403);
+    }
 };
 
 module.exports = {
     register,
     login,
+    refreshAccessToken,
 };
