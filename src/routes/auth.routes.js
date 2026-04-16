@@ -6,6 +6,7 @@ const authMiddleware = require("../middlewares/auth.middleware");
 const validate = require("../middlewares/validate.middleware");
 const { registerSchema, loginSchema, updateSchema } = require("../validations/auth.validation");
 const redisRateLimiter = require("../middlewares/redisRateLimiter.middleware");
+const authorizeRoles = require("../middlewares/role.middleware");
 
 
 
@@ -35,6 +36,15 @@ router.put(
 );
 
 router.post("/refresh-token", authController.refreshAccessTokenController);
+
+router.get(
+    "/admin-only",
+    authMiddleware,
+    authorizeRoles("ADMIN"),
+    (req, res) => {
+        res.json({ message: "Welcome Admin" });
+    }
+);
 
 
 module.exports = router;

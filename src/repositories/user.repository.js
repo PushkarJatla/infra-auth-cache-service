@@ -13,7 +13,14 @@ const findUserByEmail = async (email) => {
     });
 };
 
+const findUserById = async (id) => {
+    return prisma.user.findUnique({
+        where: { id },
+    });
+};
+
 module.exports = {
     createUser,
     findUserByEmail,
+    findUserById,
 };
