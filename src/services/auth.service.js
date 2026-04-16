@@ -25,9 +25,9 @@ const register = async ({ email, password }) => {
         email: user.email,
     };
 };
-
 const login = async ({ email, password }) => {
     const user = await userRepo.findUserByEmail(email);
+    console.log("User from DB:", user);
     if (!user) {
         throw new AppError("Invalid credentials", 401);
     }
@@ -37,8 +37,7 @@ const login = async ({ email, password }) => {
         throw new AppError("Invalid credentials", 401);
     }
 
-    // 🔥 NEW PART
-    const accessToken = generateAccessToken(user.id);
+    const accessToken = generateAccessToken(user); // 🔥 updated
     const refreshToken = generateRefreshToken(user.id);
 
     return {
@@ -59,12 +58,19 @@ const refreshAccessToken = async (refreshToken) => {
             process.env.JWT_REFRESH_SECRET
         );
 
-        const newAccessToken = generateAccessToken(decoded.userId);
+        // Fetch user from DB to get current role for the new access token
+        const user = await userRepo.findUserById(decoded.userId);
+        if (!user) {
+            throw new AppError("User not found", 401);
+        }
+
+        const newAccessToken = generateAccessToken(user);
 
         return {
             accessToken: newAccessToken,
         };
     } catch (err) {
+        if (err instanceof AppError) throw err;
         throw new AppError("Invalid refresh token", 403);
     }
 };

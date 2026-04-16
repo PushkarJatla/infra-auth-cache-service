@@ -18,8 +18,11 @@ const authMiddleware = (req, res, next) => {
         // Verify token
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-        // Attach user info to request
-        req.user = decoded;
+        // Normalize decoded payload: token uses `userId`, map it to `id`
+        req.user = {
+            id: decoded.userId,
+            role: decoded.role,
+        };
 
         next();
     } catch (err) {
