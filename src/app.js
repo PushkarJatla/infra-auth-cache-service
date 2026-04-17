@@ -10,7 +10,9 @@ const authRoutes = require("./routes/auth.routes");
 const app = express();
 
 app.use(express.json());
-app.use(cors());
+app.use(cors({
+    origin: "*"
+}));
 app.use(helmet());
 app.use(morgan("dev"));
 
